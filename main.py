@@ -2,33 +2,46 @@ import simpy
 import random
 
 
-def proceso(env, name, cpu, instrucciones,memoria,t):
-    #yield env.timeout(t) #Se espera un tiempo para poder crear el proceso
-    print('Se ha creado el proceso #',i)
-    creacion = env.now
+def proceso(evento, name, t, cpu,nmt, nm, ni, espera):
 
-    with cpu.request() as req: #Se pide al cpu que nos atienda
-        yield req
+    global TT
+    global TL
+    yield evento.timeout(t)
+    nmt.get(nm)
+    t1 = evento.now
+    print ('Se creo el %s en el tiempo %s'%(name,t1))
+    yield cpu.request()
+    while (ni>0):
+            t2 = evento.now
+            print('%s se encuentra en el CPU en el tiempo'%(name,t2))
+            if (ni>=3):
+                ni = ni -3
+                if (espera == 1):
+                    env.timeout(random.randint(1,10))
+            else:
+                print('%s esperando en el tiempo %s'%(name,env.now))
+                ni = 0
+    t2 = evento.now
+    TP = t2 - t1
+    TL.append(TP)
+    TT = TT + TP
+    print('%s termina en el tiempo %s'%(name,t2))
+    print('El tiempo promedio es de %s'%(TP/NP))
+    memoria.put(nm)
 
 
 
-env = simpy.Environment()
-cpu = simpy.Resource(env, capacity=1)
-tiempoTotal = 0.0
-RANDOM_SEED = 42
-random.seed(RANDOM_SEED)
-interval = 100
-
-for i in range(25):
-    t = random.expovariate(1.0/interval)
-    ni = random.randint(1,10)
+TT = 0
+TL = []
+NP = 50
+evento = simpy.Environment()
+nmt = simpy.resources.container.Container(evento,100,100)
+cpu = simpy.Resource(evento,capacity = 1)
+for i in range(NP):
+    ins = random.randint(1,10)
     nm = random.randint(1,10)
-    (proceso(env, i, cpu, ni,nm,t))
+    espera = random.randint(0,1)
+    t = random.expovariate(1.0/10)
+    evento.process(proceso(evento,'Proceso #%d'%i,t,cpu,nmt, nm,ins,espera))
     
-
-
-        
-        
-        
-        
-        
+evento.run()
