@@ -1,5 +1,6 @@
 import simpy
 import random
+import math
 
 
 def proceso(evento, name, t, cpu,nmt, nm, ni, espera):
@@ -33,7 +34,7 @@ def proceso(evento, name, t, cpu,nmt, nm, ni, espera):
 
 TT = 0
 TL = []
-NP = 50
+NP = 25
 evento = simpy.Environment()
 nmt = simpy.resources.container.Container(evento,100,100)
 cpu = simpy.Resource(evento,capacity = 1)
@@ -45,3 +46,18 @@ for i in range(NP):
     evento.process(proceso(evento,'Proceso #%d'%i,t,cpu,nmt, nm,ins,espera))
     
 evento.run()
+TT = TT/NP
+
+desviacion = 0
+for i in range(0,len(TL)):
+    x = TL[i]
+    x = x - TT
+    x = x*x
+    desviacion = desviacion + x
+    desviacion = desviacion / len(TL)
+desviacion = math.sqrt(desviacion)
+
+print('El tiempo promedio por proceso es de %d y la desviacion estandar de %d' % (TT,desviacion))
+
+    
+    
